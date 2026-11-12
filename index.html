@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>The Whistle Lockbox</title>
+  <meta name="theme-color" content="#0b0f17" />
+  <style>
+    :root {
+      --bg-deep: #080b11;
+      --bg-card: #121824;
+      --bg-card-alt: #182030;
+      --amber: #f59e0b;
+      --amber-light: #fcd34d;
+      --amber-glow: rgba(245, 158, 11, 0.35);
+      --emerald: #10b981;
+      --emerald-glow: rgba(16, 185, 129, 0.35);
+      --rose: #f43f5e;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: rgba(255, 255, 255, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: radial-gradient(circle at 50% 15%, #161f33 0%, var(--bg-deep) 75%);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 16px 24px;
+      overflow-x: hidden;
+    }
+
+    #confetti-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    .app-shell {
+      width: 100%;
+      max-width: 400px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      position: relative;
+      z-index: 10;
+    }
+
+    /* Header & Lock Icon */
+    .header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .lock-badge {
+      font-size: 11px;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--amber-light);
+      opacity: 0.8;
+      font-weight: 600;
+    }
+
+    /* Central Lock & Progress Ring */
+    .visualizer-stage {
+      position: relative;
+      width: 250px;
+      height: 250px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 4px 0;
+    }
+
+    #spectrum-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .progress-ring {
+      position: absolute;
+      inset: 18px;
+      width: 214px;
+      height: 214px;
+      transform: rotate(-90deg);
+      pointer-events: none;
+    }
+
+    .progress-ring-bg {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.06);
+      stroke-width: 6;
+    }
+
+    .progress-ring-fill {
+      fill: none;
+      stroke: url(#amberGrad);
+      stroke-width: 6;
+      stroke-linecap: round;
+      stroke-dasharray: 628.3;
+      stroke-dashoffset: 628.3;
+      filter: drop-shadow(0 0 8px var(--amber-glow));
+      transition: stroke 0.3s ease;
+    }
+
+    .lock-core {
+      position: relative;
+      width: 116px;
+      height: 116px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, #232f46, #0f1522);
+      border: 1px solid rgba(245, 158, 11, 0.28);
+      box-shadow:
+        0 10px 30px rgba(0, 0, 0, 0.6),
+        inset 0 1px 2px rgba(255, 255, 255, 0.12),
+        0 0 25px rgba(245, 158, 11, 0.08);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+      z-index: 5;
+    }
+
+    .lock-core:active {
+      transform: scale(0.95);
+    }
+
+    .lock-core.active-whistle {
+      border-color: var(--amber-light);
+      box-shadow:
+        0 0 35px var(--amber-glow),
+        inset 0 0 15px rgba(245, 158, 11, 0.25);
+    }
+
+    .lock-core.unlocked {
+      border-color: var(--emerald);
+      box-shadow:
+        0 0 40px var(--emerald-glow),
+        inset 0 0 20px rgba(16, 185, 129, 0.25);
+    }
+
+    .padlock-svg {
+      width: 48px;
+      height: 48px;
+      overflow: visible;
+    }
+
+    .padlock-shackle {
+      fill: none;
+      stroke: var(--amber-light);
+      stroke-width: 4.5;
+      stroke-linecap: round;
+      transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), stroke 0.4s ease;
+      transform-origin: 36px 22px;
+    }
+
+    .lock-core.unlocked .padlock-shackle {
+      transform: translateY(-9px) rotate(22deg);
+      stroke: var(--emerald);
+    }
+
+    .padlock-body {
+      fill: var(--amber);
+      transition: fill 0.4s ease;
+    }
+
+    .lock-core.unlocked .padlock-body {
+      fill: var(--emerald);
+    }
+
+    .padlock-keyhole {
+      fill: #0b0f17;
+    }
+
+    .hold-pct {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--amber-light);
+      margin-top: 4px;
+      letter-spacing: 0.5px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .hold-pct.visible {
+      opacity: 1;
+    }
+
+    /* Coaching Pill */
+    .status-pill {
+      min-height: 36px;
+      padding: 8px 18px;
+      border-radius: 999px;
+      background: rgba(24, 32, 48, 0.85);
+      border: 1px solid var(--border);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-align: center;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+      transition: all 0.2s ease;
+    }
+
+    .status-pill.good {
+      border-color: var(--amber);
+      color: var(--amber-light);
+      box-shadow: 0 0 20px rgba(245, 158, 11, 0.2);
+    }
+
+    .status-pill.warn {
+      border-color: rgba(244, 63, 94, 0.5);
+      color: #fda4af;
+    }
+
+    /* Two Compact Visual Meters */
+    .meters-grid {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .meter-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .meter-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    .meter-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .meter-val {
+      font-size: 14px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      color: var(--text-main);
+    }
+
+    .meter-val.in-zone {
+      color: var(--amber-light);
+    }
+
+    .meter-track {
+      position: relative;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.07);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    /* Target whistle zone highlight on pitch track */
+    .pitch-zone-marker {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 30%;
+      width: 45%;
+      background: rgba(245, 158, 11, 0.22);
+      border-left: 1px dashed rgba(252, 211, 77, 0.6);
+      border-right: 1px dashed rgba(252, 211, 77, 0.6);
+      z-index: 1;
+    }
+
+    /* Threshold marker on power track */
+    .power-threshold-marker {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 85%;
+      width: 2px;
+      background: var(--amber-light);
+      box-shadow: 0 0 6px var(--amber);
+      z-index: 2;
+    }
+
+    .meter-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 99px;
+      background: #64748b;
+      transition: width 0.06s linear, background 0.15s ease;
+    }
+
+    .meter-fill.active {
+      background: linear-gradient(90deg, var(--amber), var(--amber-light));
+      box-shadow: 0 0 10px var(--amber-glow);
+    }
+
+    /* Code Tumblers / Reveal Box */
+    .combination-box {
+      width: 100%;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      transition: border-color 0.4s ease, box-shadow 0.4s ease;
+    }
+
+    .combination-box.unlocked {
+      border-color: rgba(245, 158, 11, 0.5);
+      box-shadow: 0 0 30px rgba(245, 158, 11, 0.15);
+    }
+
+    .digits-row {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .digit-slot {
+      width: 56px;
+      height: 68px;
+      border-radius: 12px;
+      background: #090d15;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      color: var(--text-muted);
+      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .combination-box.unlocked .digit-slot {
+      color: var(--amber-light);
+      border-color: var(--amber);
+      background: radial-gradient(circle at 50% 0%, rgba(245, 158, 11, 0.2), #090d15 80%);
+      text-shadow: 0 0 16px var(--amber-glow);
+      transform: translateY(-2px);
+    }
+
+    .reveal-note {
+      font-size: 13px;
+      color: var(--amber-light);
+      text-align: center;
+      line-height: 1.4;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    .combination-box.unlocked .reveal-note {
+      display: block;
+      opacity: 1;
+    }
+
+    /* Action Buttons */
+    .actions-row {
+      width: 100%;
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-primary {
+      flex: 1;
+      height: 54px;
+      border-radius: 16px;
+      border: none;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #080b11;
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: 0.4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      cursor: pointer;
+      box-shadow: 0 6px 24px rgba(245, 158, 11, 0.35);
+      transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+
+    .btn-primary:active {
+      transform: scale(0.97);
+    }
+
+    .btn-primary.listening {
+      background: var(--bg-card-alt);
+      color: var(--amber-light);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      box-shadow: none;
+    }
+
+    .btn-guide {
+      width: 54px;
+      height: 54px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-main);
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .btn-guide:active {
+      transform: scale(0.95);
+    }
+
+    /* Collapsible Illustrated Finger-Whistle Guide Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(4, 6, 10, 0.8);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 50;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .modal-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .sheet {
+      width: 100%;
+      max-width: 420px;
+      background: #121824;
+      border-top: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 24px 24px 0 0;
+      padding: 20px 18px 30px;
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .modal-backdrop.open .sheet {
+      transform: translateY(0);
+    }
+
+    .sheet-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .sheet-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--amber-light);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sheet-close {
+      background: rgba(255, 255, 255, 0.08);
+      border: none;
+      color: var(--text-main);
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .step-card {
+      background: var(--bg-card-alt);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 6px;
+    }
+
+    .step-num {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--amber);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .step-emoji {
+      font-size: 32px;
+      line-height: 1.1;
+      margin: 2px 0;
+    }
+
+    .step-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .step-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.3;
+    }
+
+    /* Calibration Drawer */
+    .calib-form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .calib-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .calib-row input {
+      width: 110px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #090d15;
+      color: var(--text-main);
+      font-size: 13px;
+      font-weight: 600;
+      text-align: right;
+      user-select: text;
+      -webkit-user-select: text;
+    }
+
+    .calib-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .btn-small {
+      flex: 1;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg-card-alt);
+      color: var(--text-main);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-small.amber {
+      background: var(--amber);
+      color: #080b11;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="confetti-canvas"></canvas>
+
+  <main class="app-shell">
+    <header class="header">
+      <div class="lock-badge">Acoustic Lockbox</div>
+    </header>
+
+    <!-- Central Visualizer + Lock -->
+    <div class="visualizer-stage">
+      <canvas id="spectrum-canvas" width="500" height="500"></canvas>
+
+      <svg class="progress-ring" viewBox="0 0 214 214">
+        <defs>
+          <linearGradient id="amberGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#fde68a" />
+            <stop offset="100%" stop-color="#f59e0b" />
+          </linearGradient>
+        </defs>
+        <circle class="progress-ring-bg" cx="107" cy="107" r="100"></circle>
+        <circle class="progress-ring-fill" id="progress-circle" cx="107" cy="107" r="100"></circle>
+      </svg>
+
+      <div class="lock-core" id="lock-core" title="Tap 5x to calibrate">
+        <svg class="padlock-svg" viewBox="0 0 48 48">
+          <path class="padlock-shackle" d="M14 22 V14 A10 10 0 0 1 34 14 V22" />
+          <rect class="padlock-body" x="9" y="21" width="30" height="22" rx="6" />
+          <circle class="padlock-keyhole" cx="24" cy="30" r="2.5" />
+          <path class="padlock-keyhole" d="M23 31.5 L22.2 36.5 H25.8 L25 31.5 Z" />
+        </svg>
+        <div class="hold-pct" id="hold-pct">0%</div>
+      </div>
+    </div>
+
+    <!-- Minimal Dynamic Coaching Hint -->
+    <div class="status-pill" id="status-pill">
+      <span>Tap below &amp; whistle to unlock</span>
+    </div>
+
+    <!-- Live Pitch & Power Meters -->
+    <div class="meters-grid">
+      <div class="meter-card">
+        <div class="meter-top">
+          <span class="meter-label">Pitch</span>
+          <span class="meter-val" id="pitch-val">— Hz</span>
+        </div>
+        <div class="meter-track">
+          <div class="pitch-zone-marker" id="pitch-zone-marker"></div>
+          <div class="meter-fill" id="pitch-fill"></div>
+        </div>
+      </div>
+
+      <div class="meter-card">
+        <div class="meter-top">
+          <span class="meter-label">Power</span>
+          <span class="meter-val" id="power-val">0%</span>
+        </div>
+        <div class="meter-track">
+          <div class="power-threshold-marker" id="power-threshold-marker"></div>
+          <div class="meter-fill" id="power-fill"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4-Digit Combination Tumblers -->
+    <div class="combination-box" id="combination-box">
+      <div class="digits-row" id="digits-row">
+        <div class="digit-slot">•</div>
+        <div class="digit-slot">•</div>
+        <div class="digit-slot">•</div>
+        <div class="digit-slot">•</div>
+      </div>
+      <div class="reveal-note" id="reveal-note"></div>
+    </div>
+
+    <!-- Primary Controls -->
+    <div class="actions-row">
+      <button class="btn-primary" id="start-btn">
+        <span id="start-btn-icon">🎙️</span>
+        <span id="start-btn-text">Start Listening</span>
+      </button>
+      <button class="btn-guide" id="guide-btn" aria-label="How to whistle">
+        🤌
+      </button>
+    </div>
+  </main>
+
+  <!-- How to Finger Whistle Visual Sheet -->
+  <div class="modal-backdrop" id="guide-modal">
+    <div class="sheet">
+      <div class="sheet-header">
+        <div class="sheet-title"><span>🤌</span> <span>Finger Whistle in 4 Steps</span></div>
+        <button class="sheet-close" id="guide-close">✕</button>
+      </div>
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-num">Step 1</div>
+          <div class="step-emoji">👌</div>
+          <div class="step-title">A-OK or V Ring</div>
+          <div class="step-desc">Touch index &amp; thumb tips (or middle fingers in an A-frame).</div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">Step 2</div>
+          <div class="step-emoji">👄</div>
+          <div class="step-title">Tuck Your Lips</div>
+          <div class="step-desc">Wet your lips and curl them tightly back over your teeth.</div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">Step 3</div>
+          <div class="step-emoji">👅</div>
+          <div class="step-title">Fold Tongue Tip</div>
+          <div class="step-desc">Push the tip of your tongue back on itself with your fingertips.</div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">Step 4</div>
+          <div class="step-emoji">💨</div>
+          <div class="step-title">Sharp Stream</div>
+          <div class="step-desc">Seal the sides with your lips and blow through the tiny center gap.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Secret Creator Calibration Drawer (Tap Lock 5x) -->
+  <div class="modal-backdrop" id="calib-modal">
+    <div class="sheet">
+      <div class="sheet-header">
+        <div class="sheet-title"><span>⚙️</span> <span>Creator Calibration</span></div>
+        <button class="sheet-close" id="calib-close">✕</button>
+      </div>
+      <div class="calib-form">
+        <div class="calib-row">
+          <label for="cfg-code">4-Digit Code</label>
+          <input id="cfg-code" type="text" maxlength="4" />
+        </div>
+        <div class="calib-row">
+          <label for="cfg-vol">Peak Threshold (0-255)</label>
+          <input id="cfg-vol" type="number" min="80" max="250" />
+        </div>
+        <div class="calib-row">
+          <label for="cfg-minf">Min Freq (Hz)</label>
+          <input id="cfg-minf" type="number" step="100" />
+        </div>
+        <div class="calib-row">
+          <label for="cfg-maxf">Max Freq (Hz)</label>
+          <input id="cfg-maxf" type="number" step="100" />
+        </div>
+        <div class="calib-row">
+          <label for="cfg-purity">Tonal Purity Ratio</label>
+          <input id="cfg-purity" type="number" step="0.5" min="1.5" max="10" />
+        </div>
+        <div class="calib-row">
+          <label for="cfg-hold">Hold Duration (ms)</label>
+          <input id="cfg-hold" type="number" step="100" min="300" max="5000" />
+        </div>
+        <div class="calib-row">
+          <label for="cfg-msg">Reveal Note</label>
+          <input id="cfg-msg" type="text" style="width: 180px;" />
+        </div>
+        <div class="calib-actions">
+          <button class="btn-small" id="calib-save">Save Local</button>
+          <button class="btn-small amber" id="calib-copy-url">Copy QR Link</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================
+    // 1. CONFIGURATION (Configurable via code, LocalStorage, or URL params)
+    // =========================================================
+    const DEFAULT_CONFIG = {
+      secretCode: "4829",
+      volumeThreshold: 215, // ~85% of 255
+      minFreq: 1800,
+      maxFreq: 4500,
+      purityRatio: 3.5,
+      holdTimeMs: 1200,
+      message: "Bet settled. Open the box & let the tiles bloom."
+    };
+
+    const CONFIG = { ...DEFAULT_CONFIG };
+
+    function loadConfig() {
+      try {
+        const saved = JSON.parse(localStorage.getItem("whistle_lockbox_cfg") || "{}");
+        Object.assign(CONFIG, saved);
+      } catch (_) {}
+
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("code")) CONFIG.secretCode = params.get("code").slice(0, 4);
+      if (params.get("vol")) CONFIG.volumeThreshold = Number(params.get("vol"));
+      if (params.get("min")) CONFIG.minFreq = Number(params.get("min"));
+      if (params.get("max")) CONFIG.maxFreq = Number(params.get("max"));
+      if (params.get("purity")) CONFIG.purityRatio = Number(params.get("purity"));
+      if (params.get("hold")) CONFIG.holdTimeMs = Number(params.get("hold"));
+      if (params.get("msg")) CONFIG.message = params.get("msg");
+
+      updateThresholdUI();
+    }
+
+    // =========================================================
+    // 2. DOM ELEMENTS
+    // =========================================================
+    const lockCore = document.getElementById("lock-core");
+    const holdPctEl = document.getElementById("hold-pct");
+    const progressCircle = document.getElementById("progress-circle");
+    const statusPill = document.getElementById("status-pill");
+    const pitchVal = document.getElementById("pitch-val");
+    const powerVal = document.getElementById("power-val");
+    const pitchFill = document.getElementById("pitch-fill");
+    const powerFill = document.getElementById("power-fill");
+    const pitchZoneMarker = document.getElementById("pitch-zone-marker");
+    const powerThresholdMarker = document.getElementById("power-threshold-marker");
+    const combinationBox = document.getElementById("combination-box");
+    const digitsRow = document.getElementById("digits-row");
+    const revealNote = document.getElementById("reveal-note");
+    const startBtn = document.getElementById("start-btn");
+    const startBtnIcon = document.getElementById("start-btn-icon");
+    const startBtnText = document.getElementById("start-btn-text");
+    const spectrumCanvas = document.getElementById("spectrum-canvas");
+    const sCtx = spectrumCanvas.getContext("2d");
+
+    const RING_CIRCUMFERENCE = 2 * Math.PI * 100; // r=100 -> 628.318
+
+    function updateThresholdUI() {
+      const pct = Math.min(98, Math.max(10, (CONFIG.volumeThreshold / 255) * 100));
+      powerThresholdMarker.style.left = `${pct}%`;
+
+      const maxScaleHz = 6000;
+      const leftPct = Math.max(0, Math.min(95, (CONFIG.minFreq / maxScaleHz) * 100));
+      const widthPct = Math.max(5, Math.min(100 - leftPct, ((CONFIG.maxFreq - CONFIG.minFreq) / maxScaleHz) * 100));
+      pitchZoneMarker.style.left = `${leftPct}%`;
+      pitchZoneMarker.style.width = `${widthPct}%`;
+    }
+
+    loadConfig();
+
+    // =========================================================
+    // 3. WEB AUDIO API & FFT ACOUSTIC ENGINE
+    // =========================================================
+    let audioCtx = null;
+    let analyser = null;
+    let micStream = null;
+    let freqData = null;
+    let isListening = false;
+    let isUnlocked = false;
+    let rafId = null;
+    let progress = 0; // 0.0 to 1.0
+    let lastFrameTime = 0;
+
+    async function toggleListening() {
+      if (isUnlocked) return;
+      if (isListening) {
+        stopAudio();
+        setStatus("Paused. Tap to resume", "");
+        return;
+      }
+
+      try {
+        micStream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: false,
+            noiseSuppression: false,
+            autoGainControl: false
+          }
+        });
+
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContextClass();
+        if (audioCtx.state === "suspended") {
+          await audioCtx.resume();
+        }
+
+        const source = audioCtx.createMediaStreamSource(micStream);
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 2048;
+        analyser.smoothingTimeConstant = 0.25;
+        source.connect(analyser);
+
+        freqData = new Uint8Array(analyser.frequencyBinCount);
+        isListening = true;
+        lastFrameTime = performance.now();
+
+        startBtn.classList.add("listening");
+        startBtnIcon.textContent = "⏹️";
+        startBtnText.textContent = "Listening...";
+        holdPctEl.classList.add("visible");
+        setStatus("Listening... give a sharp whistle!", "");
+
+        rafId = requestAnimationFrame(analyzeLoop);
+      } catch (err) {
+        setStatus("Mic access needed to unlock", "warn");
+      }
+    }
+
+    function stopAudio() {
+      isListening = false;
+      if (rafId) cancelAnimationFrame(rafId);
+      if (micStream) {
+        micStream.getTracks().forEach(t => t.stop());
+        micStream = null;
+      }
+      if (audioCtx) {
+        audioCtx.close().catch(() => {});
+        audioCtx = null;
+      }
+      startBtn.classList.remove("listening");
+      startBtnIcon.textContent = "🎙️";
+      startBtnText.textContent = isUnlocked ? "Unlocked" : "Start Listening";
+    }
+
+    function analyzeLoop(now) {
+      if (!isListening) return;
+      const dt = Math.min(0.1, (now - lastFrameTime) / 1000);
+      lastFrameTime = now;
+
+      analyser.getByteFrequencyData(freqData);
+
+      const sampleRate = audioCtx.sampleRate;
+      const binCount = analyser.frequencyBinCount; // 1024
+      const binHz = sampleRate / analyser.fftSize;
+
+      const minBin = Math.max(1, Math.floor(CONFIG.minFreq / binHz));
+      const maxBin = Math.min(binCount - 1, Math.ceil(CONFIG.maxFreq / binHz));
+
+      // 1. Dominant frequency & peak amplitude
+      let overallPeakVal = 0;
+      let overallPeakBin = 0;
+      let targetPeakVal = 0;
+      let targetPeakBin = minBin;
+
+      let outsideSum = 0;
+      let outsideCount = 0;
+      let sumSquares = 0;
+
+      // Analyze up to ~8000 Hz for relevant voice/whistle/breath energy
+      const analysisMaxBin = Math.min(binCount - 1, Math.ceil(8000 / binHz));
+
+      for (let i = 1; i <= analysisMaxBin; i++) {
+        const val = freqData[i];
+        sumSquares += val * val;
+
+        if (val > overallPeakVal) {
+          overallPeakVal = val;
+          overallPeakBin = i;
+        }
+
+        if (i >= minBin && i <= maxBin) {
+          if (val > targetPeakVal) {
+            targetPeakVal = val;
+            targetPeakBin = i;
+          }
+        }
+      }
+
+      // Calculate average energy outside the narrow peak neighborhood
+      // (ignore +/- 3 bins around the target peak and its 2nd harmonic so pure harmonics don't penalize purity)
+      const harmonicBin = targetPeakBin * 2;
+      for (let i = 2; i <= analysisMaxBin; i++) {
+        if (Math.abs(i - targetPeakBin) <= 4 || Math.abs(i - harmonicBin) <= 4) continue;
+        outsideSum += freqData[i];
+        outsideCount++;
+      }
+
+      const outsideAvg = outsideCount > 0 ? outsideSum / outsideCount : 1;
+      const dominantHz = Math.round(overallPeakBin * binHz);
+      const rms = Math.sqrt(sumSquares / analysisMaxBin);
+      const powerPct = Math.min(100, Math.round((targetPeakVal / 255) * 100));
+      const purity = targetPeakVal / Math.max(1, outsideAvg);
+
+      // Check all 3 unlock conditions simultaneously
+      const inFreqBand = dominantHz >= CONFIG.minFreq && dominantHz <= CONFIG.maxFreq;
+      const enoughVolume = targetPeakVal >= CONFIG.volumeThreshold;
+      const isPureTone = purity >= CONFIG.purityRatio;
+
+      const isValidWhistle = inFreqBand && enoughVolume && isPureTone;
+
+      // Update hold progress: +100% per holdTimeMs when met, -50%/sec decay when not met
+      const fillRate = 1000 / CONFIG.holdTimeMs; // e.g., 1/1.2 per sec
+      if (isValidWhistle) {
+        progress = Math.min(1, progress + dt * fillRate);
+        lockCore.classList.add("active-whistle");
+      } else {
+        progress = Math.max(0, progress - dt * 0.5);
+        lockCore.classList.remove("active-whistle");
+      }
+
+      // Update UI meters & visualizers
+      updateDashboardUI(dominantHz, overallPeakVal, targetPeakVal, powerPct, purity, inFreqBand, enoughVolume, isPureTone, rms);
+      drawCircularSpectrum(minBin, maxBin, isValidWhistle);
+
+      if (progress >= 1) {
+        triggerUnlock();
+        return;
+      }
+
+      rafId = requestAnimationFrame(analyzeLoop);
+    }
+
+    function updateDashboardUI(dominantHz, overallPeakVal, targetPeakVal, powerPct, purity, inFreqBand, enoughVolume, isPureTone, rms) {
+      // Progress Ring
+      const offset = RING_CIRCUMFERENCE * (1 - progress);
+      progressCircle.style.strokeDashoffset = offset.toFixed(1);
+      holdPctEl.textContent = `${Math.round(progress * 100)}%`;
+
+      // Pitch Meter
+      if (overallPeakVal < 35) {
+        pitchVal.textContent = "— Hz";
+        pitchVal.classList.remove("in-zone");
+        pitchFill.style.width = "0%";
+        pitchFill.classList.remove("active");
+      } else {
+        pitchVal.textContent = `${dominantHz} Hz`;
+        pitchVal.classList.toggle("in-zone", inFreqBand);
+        const pitchPct = Math.min(100, Math.max(2, (dominantHz / 6000) * 100));
+        pitchFill.style.width = `${pitchPct}%`;
+        pitchFill.classList.toggle("active", inFreqBand);
+      }
+
+      // Power Meter
+      powerVal.textContent = `${powerPct}%`;
+      powerFill.style.width = `${powerPct}%`;
+      powerFill.classList.toggle("active", enoughVolume);
+
+      // Dynamic Coaching Hints
+      if (inFreqBand && enoughVolume && isPureTone) {
+        if (progress > 0.55) {
+          setStatus("Hold it! Almost there...", "good");
+        } else {
+          setStatus("Locked on! Hold that note...", "good");
+        }
+      } else if (overallPeakVal < 45) {
+        setStatus("Listening... give a sharp whistle!", "");
+      } else if (!isPureTone && rms > 40) {
+        if (dominantHz < 900) {
+          setStatus("Just air! Fold your tongue back...", "warn");
+        } else {
+          setStatus("Don't scream or blow—pure whistle!", "warn");
+        }
+      } else if (inFreqBand && !enoughVolume) {
+        setStatus("Good pitch, now louder!", "good");
+      } else if (dominantHz < CONFIG.minFreq) {
+        setStatus("Too low—tighten lips & blow sharper", "");
+      } else if (dominantHz > CONFIG.maxFreq) {
+        setStatus("Super high! Ease the air slightly", "");
+      }
+    }
+
+    function setStatus(text, tone) {
+      statusPill.textContent = text;
+      statusPill.className = "status-pill" + (tone ? ` ${tone}` : "");
+    }
+
+    // =========================================================
+    // 4. CIRCULAR SPECTRUM VISUALIZER
+    // =========================================================
+    function drawCircularSpectrum(minBin, maxBin, isValidWhistle) {
+      const w = spectrumCanvas.width;
+      const h = spectrumCanvas.height;
+      const cx = w / 2;
+      const cy = h / 2;
+      const baseRadius = 192;
+      const maxBarLen = 52;
+
+      sCtx.clearRect(0, 0, w, h);
+
+      const numBars = 64;
+      // Map bars across bins 4 to 220 (~85Hz to ~4800Hz)
+      const startBin = 4;
+      const endBin = Math.min(freqData.length - 1, Math.max(maxBin + 18, 220));
+
+      for (let i = 0; i < numBars; i++) {
+        const t = i / numBars;
+        const binIndex = Math.floor(startBin + t * (endBin - startBin));
+        const val = freqData ? freqData[binIndex] : 0;
+        const norm = val / 255;
+
+        const isTargetZone = binIndex >= minBin && binIndex <= maxBin;
+        const angle = (i / numBars) * Math.PI * 2 - Math.PI / 2;
+
+        const barLen = Math.max(4, norm * maxBarLen);
+        const x1 = cx + Math.cos(angle) * baseRadius;
+        const y1 = cy + Math.sin(angle) * baseRadius;
+        const x2 = cx + Math.cos(angle) * (baseRadius + barLen);
+        const y2 = cy + Math.sin(angle) * (baseRadius + barLen);
+
+        sCtx.beginPath();
+        sCtx.moveTo(x1, y1);
+        sCtx.lineTo(x2, y2);
+        sCtx.lineWidth = isTargetZone ? 5 : 3.5;
+        sCtx.lineCap = "round";
+
+        if (isTargetZone) {
+          const alpha = 0.28 + norm * 0.72;
+          sCtx.strokeStyle = isValidWhistle
+            ? `rgba(252, 211, 77, ${alpha})`
+            : `rgba(245, 158, 11, ${alpha})`;
+        } else {
+          const alpha = 0.12 + norm * 0.4;
+          sCtx.strokeStyle = `rgba(148, 163, 184, ${alpha})`;
+        }
+        sCtx.stroke();
+      }
+    }
+
+    // Draw initial idle ring
+    drawCircularSpectrum(80, 200, false);
+
+    // =========================================================
+    // 5. UNLOCK REVEAL & CONFETTI
+    // =========================================================
+    function triggerUnlock() {
+      isUnlocked = true;
+      stopAudio();
+
+      progress = 1;
+      progressCircle.style.strokeDashoffset = "0";
+      progressCircle.style.stroke = "#10b981";
+      lockCore.classList.remove("active-whistle");
+      lockCore.classList.add("unlocked");
+      holdPctEl.textContent = "OPEN";
+      holdPctEl.style.color = "#10b981";
+
+      setStatus("Unlocked! Code revealed below", "good");
+      startBtn.style.display = "none";
+
+      // Animate 4-digit tumblers
+      combinationBox.classList.add("unlocked");
+      revealNote.textContent = CONFIG.message;
+
+      const codeChars = String(CONFIG.secretCode).padStart(4, "0").slice(0, 4).split("");
+      const slots = digitsRow.querySelectorAll(".digit-slot");
+
+      slots.forEach((slot, idx) => {
+        let ticks = 0;
+        const maxTicks = 8 + idx * 4;
+        const timer = setInterval(() => {
+          ticks++;
+          if (ticks >= maxTicks) {
+            clearInterval(timer);
+            slot.textContent = codeChars[idx];
+          } else {
+            slot.textContent = Math.floor(Math.random() * 10);
+          }
+        }, 45);
+      });
+
+      launchConfetti();
+    }
+
+    function launchConfetti() {
+      const canvas = document.getElementById("confetti-canvas");
+      const ctx = canvas.getContext("2d");
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const colors = ["#f59e0b", "#fcd34d", "#10b981", "#38bdf8", "#f43f5e"];
+      const pieces = Array.from({ length: 90 }, () => ({
+        x: canvas.width / 2 + (Math.random() - 0.5) * 80,
+        y: canvas.height * 0.35,
+        vx: (Math.random() - 0.5) * 14,
+        vy: -Math.random() * 14 - 4,
+        size: Math.random() * 7 + 4,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        rot: Math.random() * Math.PI * 2,
+        vRot: (Math.random() - 0.5) * 0.25
+      }));
+
+      let frame = 0;
+      function tick() {
+        frame++;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let alive = false;
+        for (const p of pieces) {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.38;
+          p.vx *= 0.99;
+          p.rot += p.vRot;
+          if (p.y < canvas.height + 20) alive = true;
+
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rot);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.65);
+          ctx.restore();
+        }
+        if (alive && frame < 240) requestAnimationFrame(tick);
+        else ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+      requestAnimationFrame(tick);
+    }
+
+    // =========================================================
+    // 6. GUIDE MODAL & 5-TAP CREATOR CALIBRATION DRAWER
+    // =========================================================
+    const guideModal = document.getElementById("guide-modal");
+    document.getElementById("guide-btn").addEventListener("click", () => {
+      guideModal.classList.add("open");
+    });
+    document.getElementById("guide-close").addEventListener("click", () => {
+      guideModal.classList.remove("open");
+    });
+    guideModal.addEventListener("click", (e) => {
+      if (e.target === guideModal) guideModal.classList.remove("open");
+    });
+
+    startBtn.addEventListener("click", toggleListening);
+
+    // 5-Tap Secret Calibration Mode on Lock Core
+    let tapCount = 0;
+    let tapTimer = null;
+    const calibModal = document.getElementById("calib-modal");
+
+    lockCore.addEventListener("click", () => {
+      tapCount++;
+      clearTimeout(tapTimer);
+      if (tapCount >= 5) {
+        tapCount = 0;
+        openCalibrationDrawer();
+      } else {
+        tapTimer = setTimeout(() => { tapCount = 0; }, 1200);
+      }
+    });
+
+    function openCalibrationDrawer() {
+      document.getElementById("cfg-code").value = CONFIG.secretCode;
+      document.getElementById("cfg-vol").value = CONFIG.volumeThreshold;
+      document.getElementById("cfg-minf").value = CONFIG.minFreq;
+      document.getElementById("cfg-maxf").value = CONFIG.maxFreq;
+      document.getElementById("cfg-purity").value = CONFIG.purityRatio;
+      document.getElementById("cfg-hold").value = CONFIG.holdTimeMs;
+      document.getElementById("cfg-msg").value = CONFIG.message;
+      calibModal.classList.add("open");
+    }
+
+    function readCalibInputs() {
+      CONFIG.secretCode = (document.getElementById("cfg-code").value || "4829").slice(0, 4);
+      CONFIG.volumeThreshold = Number(document.getElementById("cfg-vol").value) || 215;
+      CONFIG.minFreq = Number(document.getElementById("cfg-minf").value) || 1800;
+      CONFIG.maxFreq = Number(document.getElementById("cfg-maxf").value) || 4500;
+      CONFIG.purityRatio = Number(document.getElementById("cfg-purity").value) || 3.5;
+      CONFIG.holdTimeMs = Number(document.getElementById("cfg-hold").value) || 1200;
+      CONFIG.message = document.getElementById("cfg-msg").value || DEFAULT_CONFIG.message;
+      updateThresholdUI();
+    }
+
+    document.getElementById("calib-close").addEventListener("click", () => {
+      calibModal.classList.remove("open");
+    });
+
+    document.getElementById("calib-save").addEventListener("click", () => {
+      readCalibInputs();
+      localStorage.setItem("whistle_lockbox_cfg", JSON.stringify(CONFIG));
+      calibModal.classList.remove("open");
+      setStatus("Calibration saved locally", "good");
+    });
+
+    document.getElementById("calib-copy-url").addEventListener("click", async () => {
+      readCalibInputs();
+      const url = new URL(window.location.origin + window.location.pathname);
+      url.searchParams.set("code", CONFIG.secretCode);
+      url.searchParams.set("vol", CONFIG.volumeThreshold);
+      url.searchParams.set("min", CONFIG.minFreq);
+      url.searchParams.set("max", CONFIG.maxFreq);
+      url.searchParams.set("purity", CONFIG.purityRatio);
+      url.searchParams.set("hold", CONFIG.holdTimeMs);
+      if (CONFIG.message !== DEFAULT_CONFIG.message) {
+        url.searchParams.set("msg", CONFIG.message);
+      }
+      try {
+        await navigator.clipboard.writeText(url.toString());
+        setStatus("QR Link copied to clipboard!", "good");
+      } catch (_) {
+        window.history.replaceState({}, "", url.toString());
+        setStatus("URL updated in address bar!", "good");
+      }
+      calibModal.classList.remove("open");
+    });
+  </script>
+</body>
+</html>
