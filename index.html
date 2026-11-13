@@ -806,7 +806,7 @@
     // 1. CONFIGURATION
     // =========================================================
     const DEFAULT_CONFIG = {
-      secretCode: "4829",
+      secretCode: "7246",
       volumeThreshold: 215, // ~85% of 255
       minFreq: 1800,
       maxFreq: 4500,
@@ -1302,7 +1302,7 @@
     }
 
     function readCalibInputs() {
-      CONFIG.secretCode = (document.getElementById("cfg-code").value || "4829").slice(0, 4);
+      CONFIG.secretCode = (document.getElementById("cfg-code").value || "7246").slice(0, 4);
       CONFIG.volumeThreshold = Number(document.getElementById("cfg-vol").value) || 215;
       CONFIG.minFreq = Number(document.getElementById("cfg-minf").value) || 1800;
       CONFIG.maxFreq = Number(document.getElementById("cfg-maxf").value) || 4500;
