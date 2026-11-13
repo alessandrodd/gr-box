@@ -4,21 +4,23 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>•••</title>
-  <meta name="theme-color" content="#080b11" />
+  <meta name="theme-color" content="#f7f4eb" />
   <style>
     :root {
-      --bg-deep: #080b11;
-      --bg-card: #111622;
-      --bg-card-alt: #171f30;
-      --amber: #f59e0b;
-      --amber-light: #fcd34d;
-      --amber-glow: rgba(245, 158, 11, 0.35);
-      --emerald: #10b981;
-      --emerald-glow: rgba(16, 185, 129, 0.35);
-      --rose: #f43f5e;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --border: rgba(255, 255, 255, 0.08);
+      --bg-cream: #f7f4eb;
+      --bg-card: rgba(255, 253, 248, 0.88);
+      --bg-soft: #eef2e6;
+      --matcha: #5e8c61;
+      --matcha-light: #a3c999;
+      --matcha-pale: rgba(163, 201, 153, 0.28);
+      --terracotta: #861619;
+      --cobalt: #3148d8;
+      --honey: #e89b3c;
+      --coral: #d96552;
+      --text-main: #2d382e;
+      --text-muted: #768475;
+      --border: rgba(94, 140, 97, 0.18);
+      --shadow: 0 8px 24px rgba(56, 74, 58, 0.07);
     }
 
     * {
@@ -31,16 +33,17 @@
     }
 
     body {
-      background: radial-gradient(circle at 50% 12%, #161f33 0%, var(--bg-deep) 75%);
+      background: linear-gradient(180deg, #faf8f2 0%, #f1ede0 100%);
       color: var(--text-main);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: ui-rounded, "SF Pro Rounded", "Quicksand", "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       min-height: 100dvh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: flex-start;
-      padding: 10px 14px 14px;
+      padding: 12px 16px 16px;
       overflow-x: hidden;
+      position: relative;
     }
 
     #confetti-canvas {
@@ -52,22 +55,56 @@
       z-index: 100;
     }
 
+    /* Subtle Hand-Drawn Background Scene (Stickman whistling from side + 2 Vases) */
+    .bg-doodle-scene {
+      position: fixed;
+      left: 50%;
+      bottom: 6px;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 420px;
+      height: 175px;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.45;
+      transition: opacity 0.3s ease;
+    }
+
+    body.whistling-now .bg-doodle-scene {
+      opacity: 0.78;
+    }
+
+    .whistle-notes {
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+
+    body.whistling-now .whistle-notes {
+      opacity: 1;
+      animation: floatNotes 1.1s ease-in-out infinite alternate;
+    }
+
+    @keyframes floatNotes {
+      from { transform: translate(0, 0); }
+      to { transform: translate(4px, -5px); }
+    }
+
     .app-shell {
       width: 100%;
-      max-width: 400px;
+      max-width: 390px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 9px;
+      gap: 10px;
       position: relative;
       z-index: 10;
     }
 
-    /* Compact Lock + Hold Progress Ring */
+    /* Compact Cute Lock + Hold Ring */
     .lock-stage {
       position: relative;
-      width: 98px;
-      height: 98px;
+      width: 96px;
+      height: 96px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -76,39 +113,36 @@
     .progress-ring {
       position: absolute;
       inset: 0;
-      width: 98px;
-      height: 98px;
+      width: 96px;
+      height: 96px;
       transform: rotate(-90deg);
       pointer-events: none;
     }
 
     .progress-ring-bg {
       fill: none;
-      stroke: rgba(255, 255, 255, 0.07);
-      stroke-width: 6;
+      stroke: rgba(94, 140, 97, 0.14);
+      stroke-width: 6.5;
     }
 
     .progress-ring-fill {
       fill: none;
-      stroke: url(#amberGrad);
-      stroke-width: 6;
+      stroke: var(--matcha);
+      stroke-width: 6.5;
       stroke-linecap: round;
       stroke-dasharray: 351.86;
       stroke-dashoffset: 351.86;
-      filter: drop-shadow(0 0 8px var(--amber-glow));
       transition: stroke 0.3s ease;
     }
 
     .lock-core {
       position: relative;
-      width: 74px;
-      height: 74px;
+      width: 72px;
+      height: 72px;
       border-radius: 50%;
-      background: radial-gradient(circle at 35% 30%, #232f46, #0f1522);
-      border: 1px solid rgba(245, 158, 11, 0.28);
-      box-shadow:
-        0 8px 24px rgba(0, 0, 0, 0.6),
-        inset 0 1px 2px rgba(255, 255, 255, 0.12);
+      background: #fffdf8;
+      border: 2px solid rgba(94, 140, 97, 0.25);
+      box-shadow: var(--shadow);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -119,21 +153,17 @@
     }
 
     .lock-core:active {
-      transform: scale(0.95);
+      transform: scale(0.94);
     }
 
     .lock-core.active-whistle {
-      border-color: var(--amber-light);
-      box-shadow:
-        0 0 30px var(--amber-glow),
-        inset 0 0 14px rgba(245, 158, 11, 0.25);
+      border-color: var(--matcha);
+      box-shadow: 0 0 22px rgba(94, 140, 97, 0.35);
     }
 
     .lock-core.unlocked {
-      border-color: var(--emerald);
-      box-shadow:
-        0 0 36px var(--emerald-glow),
-        inset 0 0 18px rgba(16, 185, 129, 0.25);
+      border-color: var(--matcha);
+      background: #f2f9f1;
     }
 
     .padlock-svg {
@@ -144,7 +174,7 @@
 
     .padlock-shackle {
       fill: none;
-      stroke: var(--amber-light);
+      stroke: var(--matcha);
       stroke-width: 4.5;
       stroke-linecap: round;
       transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), stroke 0.4s ease;
@@ -153,66 +183,67 @@
 
     .lock-core.unlocked .padlock-shackle {
       transform: translateY(-8px) rotate(22deg);
-      stroke: var(--emerald);
     }
 
     .padlock-body {
-      fill: var(--amber);
+      fill: var(--honey);
       transition: fill 0.4s ease;
     }
 
     .lock-core.unlocked .padlock-body {
-      fill: var(--emerald);
+      fill: var(--matcha);
     }
 
     .padlock-keyhole {
-      fill: #0b0f17;
+      fill: #fffdf8;
     }
 
     .hold-pct {
       font-size: 10px;
       font-weight: 800;
-      color: var(--amber-light);
+      color: var(--matcha);
       margin-top: 1px;
-      letter-spacing: 0.5px;
       font-variant-numeric: tabular-nums;
     }
 
-    /* Live Oscilloscope Waveform & Spectrum Visualizer Card */
+    /* Live Waveform + Spectrum Card */
     .scope-card {
       width: 100%;
       background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 8px;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      border: 1.5px solid var(--border);
+      border-radius: 22px;
+      padding: 10px;
       position: relative;
-      box-shadow: inset 0 2px 12px rgba(0, 0, 0, 0.5);
+      box-shadow: var(--shadow);
     }
 
     #scope-canvas {
       width: 100%;
-      height: 116px;
+      height: 114px;
       display: block;
-      border-radius: 10px;
+      border-radius: 14px;
+      background: rgba(238, 242, 230, 0.55);
     }
 
     .scope-legend {
       position: absolute;
       top: 16px;
-      left: 18px;
-      right: 18px;
+      left: 20px;
+      right: 20px;
       display: flex;
       justify-content: space-between;
       pointer-events: none;
       font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 1px;
+      font-weight: 800;
+      letter-spacing: 0.6px;
       text-transform: uppercase;
-      color: rgba(148, 163, 184, 0.65);
+      color: var(--text-muted);
     }
 
     .scope-zone-tag {
-      color: rgba(252, 211, 77, 0.85);
+      color: var(--matcha);
     }
 
     /* Coaching Pill */
@@ -220,28 +251,30 @@
       width: 100%;
       min-height: 36px;
       padding: 7px 14px;
-      border-radius: 12px;
-      background: rgba(23, 31, 48, 0.85);
-      border: 1px solid var(--border);
+      border-radius: 99px;
+      background: var(--bg-card);
+      border: 1.5px solid var(--border);
       font-size: 13.5px;
-      font-weight: 600;
+      font-weight: 700;
       color: var(--text-main);
       display: flex;
       align-items: center;
       justify-content: center;
       text-align: center;
+      box-shadow: var(--shadow);
       transition: all 0.2s ease;
     }
 
     .status-pill.good {
-      border-color: var(--amber);
-      color: var(--amber-light);
-      box-shadow: 0 0 18px rgba(245, 158, 11, 0.18);
+      border-color: var(--matcha);
+      background: #eef7ec;
+      color: #2f5e33;
     }
 
     .status-pill.warn {
-      border-color: rgba(244, 63, 94, 0.5);
-      color: #fda4af;
+      border-color: rgba(217, 101, 82, 0.45);
+      background: #fdf2f0;
+      color: var(--coral);
     }
 
     /* Real-Time Pitch & Power Bars */
@@ -249,17 +282,20 @@
       width: 100%;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 9px;
     }
 
     .meter-card {
       background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 15px;
-      padding: 10px 14px 12px;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      border: 1.5px solid var(--border);
+      border-radius: 18px;
+      padding: 9px 14px 11px;
       display: flex;
       flex-direction: column;
-      gap: 7px;
+      gap: 6px;
+      box-shadow: var(--shadow);
     }
 
     .meter-top {
@@ -271,67 +307,63 @@
     .meter-label {
       font-size: 11px;
       text-transform: uppercase;
-      letter-spacing: 1.2px;
+      letter-spacing: 0.8px;
       color: var(--text-muted);
-      font-weight: 700;
+      font-weight: 800;
       display: flex;
       align-items: center;
       gap: 6px;
     }
 
     .zone-pill {
-      font-size: 9px;
-      padding: 2px 6px;
-      border-radius: 6px;
-      background: rgba(245, 158, 11, 0.15);
-      color: var(--amber-light);
-      border: 1px solid rgba(245, 158, 11, 0.3);
-      letter-spacing: 0.5px;
+      font-size: 9.5px;
+      padding: 1.5px 7px;
+      border-radius: 99px;
+      background: var(--matcha-pale);
+      color: var(--matcha);
+      font-weight: 800;
     }
 
     .meter-val {
-      font-size: 14px;
+      font-size: 13.5px;
       font-weight: 800;
       font-variant-numeric: tabular-nums;
       color: var(--text-main);
     }
 
     .meter-val.in-zone {
-      color: var(--amber-light);
+      color: var(--matcha);
     }
 
     .meter-track {
       position: relative;
-      height: 14px;
-      background: #090d15;
+      height: 13px;
+      background: var(--bg-soft);
       border-radius: 99px;
       overflow: hidden;
-      border: 1px solid rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(94, 140, 97, 0.14);
     }
 
-    /* Target whistle zone highlight on pitch track */
     .pitch-zone-marker {
       position: absolute;
       top: 0;
       bottom: 0;
       left: 30%;
       width: 45%;
-      background: rgba(245, 158, 11, 0.22);
-      border-left: 2px dashed rgba(252, 211, 77, 0.85);
-      border-right: 2px dashed rgba(252, 211, 77, 0.85);
+      background: rgba(94, 140, 97, 0.2);
+      border-left: 2px dashed var(--matcha);
+      border-right: 2px dashed var(--matcha);
       z-index: 2;
       pointer-events: none;
     }
 
-    /* Threshold marker on power track */
     .power-threshold-marker {
       position: absolute;
       top: 0;
       bottom: 0;
       left: 84%;
       width: 2.5px;
-      background: var(--amber-light);
-      box-shadow: 0 0 8px var(--amber);
+      background: var(--honey);
       z-index: 3;
       pointer-events: none;
     }
@@ -341,33 +373,35 @@
       height: 100%;
       width: 0%;
       border-radius: 99px;
-      background: linear-gradient(90deg, #334155, #64748b);
+      background: linear-gradient(90deg, #94a896, #748c76);
       transition: width 0.04s linear, background 0.15s ease;
       z-index: 1;
     }
 
     .meter-fill.active {
-      background: linear-gradient(90deg, #d97706, #fbbf24);
-      box-shadow: 0 0 12px var(--amber-glow);
+      background: linear-gradient(90deg, var(--matcha), #82b879);
     }
 
-    /* Code Tumblers / Reveal Box */
+    /* 4-Digit Combination Tumblers */
     .combination-box {
       width: 100%;
       background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
       padding: 10px 14px;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 8px;
+      box-shadow: var(--shadow);
       transition: border-color 0.4s ease, box-shadow 0.4s ease;
     }
 
     .combination-box.unlocked {
-      border-color: rgba(245, 158, 11, 0.55);
-      box-shadow: 0 0 30px rgba(245, 158, 11, 0.18);
+      border-color: var(--matcha);
+      box-shadow: 0 8px 28px rgba(94, 140, 97, 0.2);
     }
 
     .digits-row {
@@ -379,14 +413,13 @@
     .digit-slot {
       width: 48px;
       height: 52px;
-      border-radius: 11px;
-      background: #090d15;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.7);
+      border-radius: 14px;
+      background: var(--bg-soft);
+      border: 1.5px solid rgba(94, 140, 97, 0.18);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 25px;
+      font-size: 24px;
       font-weight: 800;
       font-variant-numeric: tabular-nums;
       color: var(--text-muted);
@@ -394,18 +427,18 @@
     }
 
     .combination-box.unlocked .digit-slot {
-      color: var(--amber-light);
-      border-color: var(--amber);
-      background: radial-gradient(circle at 50% 0%, rgba(245, 158, 11, 0.22), #090d15 80%);
-      text-shadow: 0 0 16px var(--amber-glow);
+      color: var(--matcha);
+      border-color: var(--matcha);
+      background: #eef7ec;
       transform: translateY(-2px);
     }
 
     .reveal-note {
       font-size: 13px;
-      color: var(--amber-light);
+      font-weight: 700;
+      color: var(--matcha);
       text-align: center;
-      line-height: 1.4;
+      line-height: 1.35;
       display: none;
     }
 
@@ -422,20 +455,21 @@
 
     .btn-primary {
       flex: 1;
-      height: 52px;
-      border-radius: 15px;
+      height: 50px;
+      border-radius: 16px;
       border: none;
-      background: linear-gradient(135deg, #f59e0b, #d97706);
-      color: #080b11;
-      font-size: 16px;
+      background: var(--matcha);
+      color: #fffdf8;
+      font-family: inherit;
+      font-size: 15.5px;
       font-weight: 800;
-      letter-spacing: 0.3px;
+      letter-spacing: 0.2px;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
+      gap: 8px;
       cursor: pointer;
-      box-shadow: 0 6px 20px rgba(245, 158, 11, 0.32);
+      box-shadow: 0 6px 18px rgba(94, 140, 97, 0.28);
       transition: transform 0.12s ease, background 0.2s ease;
       touch-action: manipulation;
     }
@@ -445,17 +479,17 @@
     }
 
     .btn-primary.listening {
-      background: var(--bg-card-alt);
-      color: var(--amber-light);
-      border: 1px solid rgba(245, 158, 11, 0.45);
+      background: #fffdf8;
+      color: var(--matcha);
+      border: 2px solid var(--matcha);
       box-shadow: none;
     }
 
     .btn-guide {
-      width: 52px;
-      height: 52px;
-      border-radius: 15px;
-      border: 1px solid var(--border);
+      width: 50px;
+      height: 50px;
+      border-radius: 16px;
+      border: 1.5px solid var(--border);
       background: var(--bg-card);
       color: var(--text-main);
       font-size: 20px;
@@ -463,6 +497,7 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
+      box-shadow: var(--shadow);
       touch-action: manipulation;
     }
 
@@ -474,9 +509,9 @@
     .modal-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(4, 6, 10, 0.82);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
+      background: rgba(45, 56, 46, 0.45);
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
       z-index: 50;
       display: flex;
       align-items: flex-end;
@@ -494,12 +529,13 @@
     .sheet {
       width: 100%;
       max-width: 420px;
-      background: #121824;
-      border-top: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 24px 24px 0 0;
+      background: #fffdf8;
+      border-top: 2px solid var(--border);
+      border-radius: 26px 26px 0 0;
       padding: 20px 18px 28px;
       transform: translateY(100%);
       transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+      box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.08);
     }
 
     .modal-backdrop.open .sheet {
@@ -515,21 +551,22 @@
 
     .sheet-title {
       font-size: 15px;
-      font-weight: 700;
-      color: var(--amber-light);
+      font-weight: 800;
+      color: var(--matcha);
       display: flex;
       align-items: center;
       gap: 8px;
     }
 
     .sheet-close {
-      background: rgba(255, 255, 255, 0.08);
+      background: var(--bg-soft);
       border: none;
       color: var(--text-main);
       width: 32px;
       height: 32px;
       border-radius: 50%;
-      font-size: 16px;
+      font-size: 15px;
+      font-weight: 800;
       cursor: pointer;
     }
 
@@ -540,9 +577,9 @@
     }
 
     .step-card {
-      background: var(--bg-card-alt);
+      background: var(--bg-soft);
       border: 1px solid var(--border);
-      border-radius: 14px;
+      border-radius: 16px;
       padding: 12px 10px;
       display: flex;
       flex-direction: column;
@@ -554,24 +591,25 @@
     .step-num {
       font-size: 10px;
       font-weight: 800;
-      color: var(--amber);
-      letter-spacing: 1px;
+      color: var(--matcha);
+      letter-spacing: 0.8px;
       text-transform: uppercase;
     }
 
     .step-emoji {
-      font-size: 28px;
+      font-size: 26px;
       line-height: 1.1;
     }
 
     .step-title {
       font-size: 12.5px;
-      font-weight: 700;
+      font-weight: 800;
       color: var(--text-main);
     }
 
     .step-desc {
       font-size: 11px;
+      font-weight: 600;
       color: var(--text-muted);
       line-height: 1.3;
     }
@@ -588,18 +626,20 @@
       justify-content: space-between;
       align-items: center;
       font-size: 13px;
+      font-weight: 700;
       color: var(--text-muted);
     }
 
     .calib-row input {
       width: 110px;
       padding: 6px 10px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: #090d15;
+      border-radius: 10px;
+      border: 1.5px solid var(--border);
+      background: var(--bg-soft);
       color: var(--text-main);
+      font-family: inherit;
       font-size: 13px;
-      font-weight: 600;
+      font-weight: 700;
       text-align: right;
       user-select: text;
       -webkit-user-select: text;
@@ -614,18 +654,19 @@
     .btn-small {
       flex: 1;
       padding: 10px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: var(--bg-card-alt);
+      border-radius: 12px;
+      border: 1.5px solid var(--border);
+      background: var(--bg-soft);
       color: var(--text-main);
+      font-family: inherit;
       font-size: 12px;
-      font-weight: 700;
+      font-weight: 800;
       cursor: pointer;
     }
 
     .btn-small.amber {
-      background: var(--amber);
-      color: #080b11;
+      background: var(--matcha);
+      color: #fffdf8;
       border: none;
     }
   </style>
@@ -633,16 +674,75 @@
 <body>
   <canvas id="confetti-canvas"></canvas>
 
+  <!-- Subtle Hand-Drawn Background Scene: Her stickman in side-profile whistling + the two little vases -->
+  <svg class="bg-doodle-scene" viewBox="0 0 400 175" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <!-- Soft ground line -->
+    <path d="M24 162 Q 200 158 376 163" stroke="#d5dec9" stroke-width="2.5" stroke-linecap="round" />
+
+    <!-- LEFT: Stickman from the SIDE (facing right) with fingers in mouth whistling -->
+    <g transform="translate(22, 10)">
+      <!-- Long flowing dark-red hair cascading down the back (left side) -->
+      <path d="M52 20 C 34 15, 20 28, 17 56 C 14 82, 11 108, 14 126"
+            stroke="#820e12" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" />
+      <path d="M58 21 C 42 18, 28 32, 24 62 C 21 88, 19 108, 21 122"
+            stroke="#820e12" stroke-width="8" stroke-linecap="round" />
+
+      <!-- Royal-blue stickman body & legs -->
+      <path d="M50 64 C 49 86, 49 104, 50 122" stroke="#3148d8" stroke-width="4.8" stroke-linecap="round" />
+      <path d="M50 122 L 34 151" stroke="#3148d8" stroke-width="4.8" stroke-linecap="round" />
+      <path d="M50 122 L 66 151" stroke="#3148d8" stroke-width="4.8" stroke-linecap="round" />
+
+      <!-- Royal-blue head circle (side profile, facing right) -->
+      <circle cx="52" cy="42" r="21" fill="#faf8f2" stroke="#3148d8" stroke-width="4.8" />
+
+      <!-- Arms bent forward to the right, two middle fingers tucked into the mouth (side view!) -->
+      <!-- Far arm (slightly higher elbow) -->
+      <path d="M50 74 L 84 62 L 72 47" stroke="#3148d8" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round" />
+      <!-- Near arm (elbow forward, hand right at lips) -->
+      <path d="M50 78 L 89 72 L 73 49" stroke="#3148d8" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round" />
+
+      <!-- Black headband & cat-ear muff on the side of the head -->
+      <path d="M48 20 C 49 30, 50 37, 50 42" stroke="#0c0c0c" stroke-width="5.5" stroke-linecap="round" />
+      <circle cx="50" cy="43" r="8.5" fill="#f6a828" stroke="#0c0c0c" stroke-width="2.8" />
+      <!-- Tiny cat ears & face inside the orange muff -->
+      <path d="M44 37 L 45 33 L 49 36 Z" fill="#f6a828" stroke="#0c0c0c" stroke-width="1.3" />
+      <path d="M56 37 L 55 33 L 51 36 Z" fill="#f6a828" stroke="#0c0c0c" stroke-width="1.3" />
+      <circle cx="47.5" cy="42" r="1" fill="#0c0c0c" />
+      <circle cx="52.5" cy="42" r="1" fill="#0c0c0c" />
+      <path d="M48 45 Q 50 46.8 52 45" stroke="#0c0c0c" stroke-width="1.2" stroke-linecap="round" />
+
+      <!-- Little air puffs / whistle waves coming out to the right -->
+      <g class="whistle-notes">
+        <path d="M84 42 Q 94 37 102 40" stroke="#5e8c61" stroke-width="2.5" stroke-linecap="round" />
+        <path d="M86 49 Q 97 51 105 47" stroke="#5e8c61" stroke-width="2.5" stroke-linecap="round" />
+        <text x="110" y="42" fill="#5e8c61" font-size="15" font-weight="800">♪</text>
+      </g>
+    </g>
+
+    <!-- RIGHT: The Two Drafted Vases with Green Sprouts -->
+    <!-- Vase 1 (Larger left pot with 5 uneven green shoots) -->
+    <g transform="translate(272, 92)">
+      <path d="M12 40 C 8 28, 5 22, 3 18" stroke="#189838" stroke-width="3.2" stroke-linecap="round" />
+      <path d="M17 40 C 13 24, 9 14, 6 9" stroke="#189838" stroke-width="3.2" stroke-linecap="round" />
+      <path d="M24 40 C 26 22, 28 10, 30 2" stroke="#189838" stroke-width="3.4" stroke-linecap="round" />
+      <path d="M31 40 C 33 31, 34 26, 35 23" stroke="#189838" stroke-width="3.2" stroke-linecap="round" />
+      <path d="M37 40 C 38 35, 39 32, 39 30" stroke="#189838" stroke-width="3.2" stroke-linecap="round" />
+      <path d="M4 39 L 42 40 L 38 68 L 8 69 Z" fill="#820e12" stroke="#820e12" stroke-width="2.5" stroke-linejoin="round" />
+    </g>
+
+    <!-- Vase 2 (Smaller right pot with 3 short green shoots) -->
+    <g transform="translate(332, 104)">
+      <path d="M10 34 C 9 25, 9 19, 10 15" stroke="#189838" stroke-width="3.2" stroke-linecap="round" />
+      <path d="M18 34 C 20 25, 22 18, 23 14" stroke="#189838" stroke-width="3.2" stroke-linecap="round" />
+      <path d="M27 34 C 27 25, 27 18, 26 14" stroke="#189838" stroke-width="3.2" stroke-linecap="round" />
+      <path d="M3 33 L 34 34 L 29 56 L 8 56 Z" fill="#820e12" stroke="#820e12" stroke-width="2.5" stroke-linejoin="round" />
+    </g>
+  </svg>
+
   <main class="app-shell">
-    <!-- Top Padlock + Hold Progress Ring (no title text) -->
+    <!-- Top Padlock + Hold Progress Ring -->
     <div class="lock-stage">
       <svg class="progress-ring" viewBox="0 0 124 124">
-        <defs>
-          <linearGradient id="amberGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#fde68a" />
-            <stop offset="100%" stop-color="#f59e0b" />
-          </linearGradient>
-        </defs>
         <circle class="progress-ring-bg" cx="62" cy="62" r="56"></circle>
         <circle class="progress-ring-fill" id="progress-circle" cx="62" cy="62" r="56"></circle>
       </svg>
@@ -650,7 +750,7 @@
       <div class="lock-core" id="lock-core">
         <svg class="padlock-svg" viewBox="0 0 48 48">
           <path class="padlock-shackle" d="M14 22 V14 A10 10 0 0 1 34 14 V22" />
-          <rect class="padlock-body" x="9" y="21" width="30" height="22" rx="6" />
+          <rect class="padlock-body" x="9" y="21" width="30" height="22" rx="7" />
           <circle class="padlock-keyhole" cx="24" cy="30" r="2.5" />
           <path class="padlock-keyhole" d="M23 31.5 L22.2 36.5 H25.8 L25 31.5 Z" />
         </svg>
@@ -661,10 +761,10 @@
     <!-- Real-Time Waveform + Frequency Spectrum Visualizer -->
     <div class="scope-card">
       <div class="scope-legend">
-        <span>Waveform + Spectrum</span>
+        <span>Waveform</span>
         <span class="scope-zone-tag" id="zone-label">1.8–4.5 kHz Zone</span>
       </div>
-      <canvas id="scope-canvas" width="680" height="260"></canvas>
+      <canvas id="scope-canvas" width="680" height="240"></canvas>
     </div>
 
     <!-- Minimal Dynamic Coaching Hint -->
@@ -676,7 +776,7 @@
         <div class="meter-top">
           <span class="meter-label">
             <span>Pitch</span>
-            <span class="zone-pill" id="pitch-badge">Target Zone</span>
+            <span class="zone-pill" id="pitch-badge">Whistle Zone</span>
           </span>
           <span class="meter-val" id="pitch-val">0 Hz</span>
         </div>
@@ -719,42 +819,42 @@
         <span id="start-btn-text">Start Listening</span>
       </button>
       <button type="button" class="btn-guide" id="guide-btn" aria-label="How to whistle">
-        🤌
+        👐
       </button>
     </div>
   </main>
 
-  <!-- How to Finger Whistle Visual Sheet -->
+  <!-- How to Finger Whistle Visual Sheet (Middle-Fingers A-Frame V Method) -->
   <div class="modal-backdrop" id="guide-modal">
     <div class="sheet">
       <div class="sheet-header">
-        <div class="sheet-title"><span>🤌</span> <span>How to Finger Whistle</span></div>
+        <div class="sheet-title"><span>👐</span> <span>How to Finger Whistle</span></div>
         <button type="button" class="sheet-close" id="guide-close">✕</button>
       </div>
       <div class="steps-grid">
         <div class="step-card">
           <div class="step-num">Step 1</div>
-          <div class="step-emoji">👌</div>
-          <div class="step-title">A-OK or V Ring</div>
-          <div class="step-desc">Touch index &amp; thumb tips (or middle fingers in an A-frame).</div>
+          <div class="step-emoji">🙌</div>
+          <div class="step-title">Middle-Finger 'A'</div>
+          <div class="step-desc">Touch the tips of both middle fingers together into an inverted V.</div>
         </div>
         <div class="step-card">
           <div class="step-num">Step 2</div>
           <div class="step-emoji">👄</div>
           <div class="step-title">Tuck Your Lips</div>
-          <div class="step-desc">Wet your lips and curl them tightly back over your teeth.</div>
+          <div class="step-desc">Wet your lips and curl them tightly inward over your teeth.</div>
         </div>
         <div class="step-card">
           <div class="step-num">Step 3</div>
           <div class="step-emoji">👅</div>
           <div class="step-title">Fold Tongue Tip</div>
-          <div class="step-desc">Push the tip of your tongue back on itself with your fingertips.</div>
+          <div class="step-desc">Push the tip of your tongue back on itself with your middle fingertips.</div>
         </div>
         <div class="step-card">
           <div class="step-num">Step 4</div>
           <div class="step-emoji">💨</div>
-          <div class="step-title">Sharp Stream</div>
-          <div class="step-desc">Seal the sides with your lips and blow through the tiny center gap.</div>
+          <div class="step-title">Blow Through Gap</div>
+          <div class="step-desc">Seal the sides with your lips and blow steadily through the tiny triangle.</div>
         </div>
       </div>
     </div>
@@ -815,7 +915,7 @@
       maxFreq: 4500,
       purityRatio: 3.5,
       holdTimeMs: 1200,
-      message: "Bet settled. Open it up!"
+      message: "Bet settled. Check Locker A. G. Rain!"
     };
 
     const CONFIG = Object.assign({}, DEFAULT_CONFIG);
@@ -903,7 +1003,6 @@
       try {
         setStatus("Requesting microphone...", "");
 
-        // Crucial for iOS Safari: create/resume AudioContext synchronously inside user gesture
         const AudioContextClass = window.AudioContext || window.webkitAudioContext;
         if (!audioCtx) {
           audioCtx = new AudioContextClass();
@@ -926,7 +1025,6 @@
             }
           });
         } catch (constraintErr) {
-          // Fallback if browser rejects specific constraint keys
           micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
         }
 
@@ -958,6 +1056,7 @@
 
     function stopAudio() {
       isListening = false;
+      document.body.classList.remove("whistling-now");
       if (rafId) {
         cancelAnimationFrame(rafId);
         rafId = null;
@@ -1012,7 +1111,6 @@
         }
       }
 
-      // Tonal purity: compare peak energy in whistle band vs average energy outside the peak
       let outsideSum = 0;
       let outsideCount = 0;
       const harmonicBin = targetPeakBin * 2;
@@ -1026,8 +1124,6 @@
       const dominantHz = Math.round(overallPeakBin * binHz);
       const rms = Math.sqrt(sumSquares / displayMaxBin);
 
-      // Show overall peak amplitude on Power meter so any sound shows immediate real-time life,
-      // while unlock requires target band peak >= volumeThreshold
       const activePeak = inBand(dominantHz) ? targetPeakVal : overallPeakVal;
       const powerPct = Math.min(100, Math.round((activePeak / 255) * 100));
       const purity = targetPeakVal / Math.max(1, outsideAvg);
@@ -1042,9 +1138,11 @@
       if (isValidWhistle) {
         progress = Math.min(1, progress + dt * fillRate);
         lockCore.classList.add("active-whistle");
+        document.body.classList.add("whistling-now");
       } else {
         progress = Math.max(0, progress - dt * 0.5);
         lockCore.classList.remove("active-whistle");
+        document.body.classList.remove("whistling-now");
       }
 
       updateDashboardUI(dominantHz, overallPeakVal, targetPeakVal, powerPct, inFreqBand, enoughVolume, isPureTone, rms);
@@ -1067,7 +1165,6 @@
       progressCircle.style.strokeDashoffset = offset.toFixed(1);
       holdPctEl.textContent = Math.round(progress * 100) + "%";
 
-      // Pitch Bar (always responds to sound in real time)
       if (overallPeakVal < 18) {
         pitchVal.textContent = "0 Hz";
         pitchVal.classList.remove("in-zone");
@@ -1081,24 +1178,22 @@
         pitchFill.classList.toggle("active", inFreqBand);
       }
 
-      // Power Bar
       powerVal.textContent = powerPct + "%";
       powerFill.style.width = powerPct + "%";
       powerFill.classList.toggle("active", powerPct >= Math.round((CONFIG.volumeThreshold / 255) * 100));
 
-      // Dynamic Coaching Hints
       if (inFreqBand && enoughVolume && isPureTone) {
-        setStatus(progress > 0.5 ? "Hold it! Almost there..." : "Locked on! Hold that whistle...", "good");
+        setStatus(progress > 0.5 ? "Hold it! Almost there..." : "Nice whistle! Hold that note...", "good");
       } else if (overallPeakVal < 28) {
         setStatus("Listening... whistle into the mic!", "");
       } else if (!isPureTone && rms > 35) {
         if (dominantHz < 900) {
-          setStatus("Just air! Fold your tongue back...", "warn");
+          setStatus("Just air! Fold your tongue tip back...", "warn");
         } else {
-          setStatus("Too noisy—make a pure whistle tone!", "warn");
+          setStatus("Don't scream—make a clean whistle!", "warn");
         }
       } else if (inFreqBand && !enoughVolume) {
-        setStatus("Right pitch! Now whistle louder!", "good");
+        setStatus("Good pitch! Now whistle louder!", "good");
       } else if (dominantHz < CONFIG.minFreq) {
         setStatus("Pitch too low (" + dominantHz + " Hz) — aim higher!", "");
       } else if (dominantHz > CONFIG.maxFreq) {
@@ -1122,11 +1217,11 @@
       // 1. Highlight Target Whistle Zone band (1800 - 4500 Hz)
       const zoneX1 = (CONFIG.minFreq / MAX_DISPLAY_HZ) * w;
       const zoneX2 = (CONFIG.maxFreq / MAX_DISPLAY_HZ) * w;
-      sCtx.fillStyle = isValidWhistle ? "rgba(252, 211, 77, 0.14)" : "rgba(245, 158, 11, 0.07)";
+      sCtx.fillStyle = isValidWhistle ? "rgba(94, 140, 97, 0.20)" : "rgba(94, 140, 97, 0.09)";
       sCtx.fillRect(zoneX1, 0, zoneX2 - zoneX1, h);
 
-      sCtx.strokeStyle = "rgba(252, 211, 77, 0.35)";
-      sCtx.setLineDash([4, 4]);
+      sCtx.strokeStyle = "rgba(94, 140, 97, 0.45)";
+      sCtx.setLineDash([5, 5]);
       sCtx.lineWidth = 1.5;
       sCtx.beginPath();
       sCtx.moveTo(zoneX1, 0);
@@ -1137,48 +1232,51 @@
       sCtx.setLineDash([]);
 
       // 2. Draw Frequency Spectrum Bars along bottom
-      const numBars = 56;
-      const barWidth = (w / numBars) * 0.72;
-      const gap = (w / numBars) * 0.28;
+      const numBars = 52;
+      const barWidth = (w / numBars) * 0.68;
+      const gap = (w / numBars) * 0.32;
 
       for (let i = 0; i < numBars; i++) {
         const t = i / numBars;
         const binIdx = Math.max(1, Math.min(displayMaxBin, Math.floor(t * displayMaxBin)));
         const val = freqData ? freqData[binIdx] : 0;
         const norm = val / 255;
-        const barH = Math.max(3, norm * (h * 0.78));
+        const barH = Math.max(3, norm * (h * 0.76));
         const x = i * (barWidth + gap) + gap / 2;
         const y = h - barH;
 
         const inZone = binIdx >= minBin && binIdx <= maxBin;
         if (inZone) {
           sCtx.fillStyle = isValidWhistle
-            ? "rgba(252, 211, 77, " + (0.45 + norm * 0.55) + ")"
-            : "rgba(245, 158, 11, " + (0.35 + norm * 0.65) + ")";
+            ? "rgba(94, 140, 97, " + (0.55 + norm * 0.45) + ")"
+            : "rgba(232, 155, 60, " + (0.45 + norm * 0.55) + ")";
         } else {
-          sCtx.fillStyle = "rgba(100, 116, 139, " + (0.2 + norm * 0.45) + ")";
+          sCtx.fillStyle = "rgba(118, 132, 117, " + (0.22 + norm * 0.4) + ")";
         }
-        sCtx.fillRect(x, y, barWidth, barH);
+        sCtx.beginPath();
+        sCtx.roundRect ? sCtx.roundRect(x, y, barWidth, barH, 3) : sCtx.rect(x, y, barWidth, barH);
+        sCtx.fill();
       }
 
       // 3. Draw Live Time-Domain Oscilloscope Waveform across the center
       sCtx.beginPath();
-      sCtx.lineWidth = 3;
-      sCtx.strokeStyle = isValidWhistle ? "#fde68a" : "#38bdf8";
+      sCtx.lineWidth = 3.2;
+      sCtx.lineCap = "round";
+      sCtx.lineJoin = "round";
+      sCtx.strokeStyle = isValidWhistle ? "#467349" : "#3148d8";
 
       if (timeData && isListening) {
         const sliceWidth = w / 256;
         let x = 0;
         for (let i = 0; i < 256; i++) {
-          const v = timeData[i * 4] / 128.0; // 0..2 centered at 1
+          const v = timeData[i * 4] / 128.0;
           const y = (v * h) / 2;
           if (i === 0) sCtx.moveTo(x, y);
           else sCtx.lineTo(x, y);
           x += sliceWidth;
         }
       } else {
-        // Idle flat sine wave
-        sCtx.strokeStyle = "rgba(148, 163, 184, 0.35)";
+        sCtx.strokeStyle = "rgba(118, 132, 117, 0.35)";
         sCtx.moveTo(0, h / 2);
         sCtx.lineTo(w, h / 2);
       }
@@ -1191,16 +1289,15 @@
     function triggerUnlock() {
       isUnlocked = true;
       stopAudio();
+      document.body.classList.add("whistling-now");
 
       progress = 1;
       progressCircle.style.strokeDashoffset = "0";
-      progressCircle.style.stroke = "#10b981";
       lockCore.classList.remove("active-whistle");
       lockCore.classList.add("unlocked");
       holdPctEl.textContent = "OPEN";
-      holdPctEl.style.color = "#10b981";
 
-      setStatus("Unlocked! Code revealed below", "good");
+      setStatus("Unlocked! Here is your combination:", "good");
       startBtn.style.display = "none";
 
       combinationBox.classList.add("unlocked");
@@ -1232,13 +1329,13 @@
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
 
-      const colors = ["#f59e0b", "#fcd34d", "#10b981", "#38bdf8", "#f43f5e"];
-      const pieces = Array.from({ length: 90 }, function() {
+      const colors = ["#5e8c61", "#a3c999", "#e89b3c", "#3148d8", "#861619"];
+      const pieces = Array.from({ length: 85 }, function() {
         return {
           x: canvas.width / 2 + (Math.random() - 0.5) * 80,
           y: canvas.height * 0.3,
-          vx: (Math.random() - 0.5) * 14,
-          vy: -Math.random() * 14 - 4,
+          vx: (Math.random() - 0.5) * 13,
+          vy: -Math.random() * 13 - 4,
           size: Math.random() * 7 + 4,
           color: colors[Math.floor(Math.random() * colors.length)],
           rot: Math.random() * Math.PI * 2,
@@ -1255,7 +1352,7 @@
           const p = pieces[i];
           p.x += p.vx;
           p.y += p.vy;
-          p.vy += 0.38;
+          p.vy += 0.36;
           p.vx *= 0.99;
           p.rot += p.vRot;
           if (p.y < canvas.height + 20) alive = true;
@@ -1292,7 +1389,6 @@
 
     startBtn.addEventListener("click", toggleListening);
 
-    // 5-Tap Secret Calibration Mode on Lock Core
     let tapCount = 0;
     let tapTimer = null;
     const calibModal = document.getElementById("calib-modal");
